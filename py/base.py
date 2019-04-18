@@ -13,42 +13,37 @@ class Process:
     def __init__(self):
         # home path
         self.home_path = os.path.expanduser("~") + '/Desktop/Credit_Comp'
-    def sample_read(self):
-        train = pd.read_csv(self.home_path + '/input/original/train_data.csv')
-        test = pd.read_csv(self.home_path + '/input/original/test_data.csv')
-        target = train['y'] # 目的変数を抽出
+    # read original data
+    def read_data1(self):
+        train = pd.read_csv(self.home_path + '/input/original/train_data.csv').drop('id',axis=1)
+        test = pd.read_csv(self.home_path + '/input/original/test_data.csv').drop('ID',axis=1)
+        # target = train['y'] # 目的変数を抽出
         print("{} observations and {} features in train set.".format(train.shape[0],train.shape[1]))
         print("{} observations and {} features in test set.".format(test.shape[0],test.shape[1]))
-        return train,test, target
-    ##### 要修正 #######
-    def read_data(self,train_name,test_name,features_name, best_features_name,num):
-        #Loading Train and Test Data
-        Base = self.home_path + "/input/feather/"
-        train = feather.read_dataframe(Base + train_name + ".feather")
-        test = feather.read_dataframe(Base + test_name + ".feather")
-        features = feather.read_dataframe(Base + features_name + ".feather")
+        return train,test
+    # read processed data and features name list
+    def read_data2(self,features_name = None):
+        # Loading Train and Test Data
+        train = pd.read_csv(self.home_path + '/input/aggregated/train.csv')
+        test = pd.read_csv(self.home_path + '/input/aggregated/test.csv')
+        features = []
+        # features list
+        if features_name is not None: 
+          features = feather.read_dataframe(self.home_path + 'input/features/' + features_name + ".feather")
         # check data frame
         print("{} observations and {} features in train set.".format(train.shape[0],train.shape[1]))
         print("{} observations and {} features in test set.".format(test.shape[0],test.shape[1]))
         print("{} observations and {} features in features set.".format(features.shape[0],features.shape[1]))
-        # about best features
-        if os.path.exists(self.home_path + "/input/features/" + best_features_name + ".feather"):
-            best_features = feather.read_dataframe(self.home_path + "/input/features/" + best_features_name + ".feather")
-            print("{} observations and {} features in features importance set.".format(best_features.shape[0],best_features.shape[1]))
-            best_features = best_features["feature"].tolist()[:num] # features to list
-        else: 
-            best_features = []
-            print("not exist best features list")   
         # extract target
-        target = train['target']; # 必要??
+        target = train['y'] # 目的変数を抽出
         features = features["feature"].tolist() # features list
-        return train, test, features, best_features, target
+        return train, test, features
     def submit(self,predict,tech):
         # make submit file
-        submit_file = feather.read_dataframe(self.home_path + "/input/feather/sample_submission.feather")
-        submit_file["target"] = predict
+        submit_file = pd.read_csv(self.home_path + '/input/original/submit_file.csv')
+        submit_file["Y"] = predict
         # save for output/(technic name + datetime + .csv)
-        file_name = self.home_path + '/output/submit/' + tech + '/' + datetime.now().strftime("%Y%m%d") + ".csv"
+        file_name = self.home_path + '/output/submit/' + tech + '_' + datetime.now().strftime("%Y%m%d") + ".csv"
         submit_file.to_csv(file_name, index=False)
     def open_parameter(self,file_name):
         f = open(self.home_path + '/input/parameters/' + file_name + '.txt', 'rb')
@@ -79,6 +74,12 @@ class Process:
             feather.write_dataframe(cols, self.home_path + '/input/features/' + file_name + '.feather')
         return cols[:num]["feature"].tolist()
 class Applicate:
+    # 欠損値の確認
+    def missing_value(self,df):
+        pd.set_option('display.max_columns', df.shape[1])
+        total = df.isnull().sum().sort_values(ascending =False)
+        percent = (df.isnull().sum()/df.isnull().count()*100).sort_values(ascending = False)
+        return pd.concat([total, percent], axis=1, keys=['Total', 'Percent']).transpose()
     def under_sampling(self,num,rate,train,features):
         # 外れ値の比率を確認
         print('outlier rate is {a:.4%}, So we increase the proportion of outliers to {b:.4%}'
