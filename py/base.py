@@ -17,10 +17,10 @@ class Process:
     def read_data1(self):
         train = pd.read_csv(self.home_path + '/input/original/train_data.csv').drop('id',axis=1)
         test = pd.read_csv(self.home_path + '/input/original/test_data.csv').drop('ID',axis=1)
-        # target = train['y'] # 目的変数を抽出
+        target = train['y'] # 目的変数を抽出
         print("{} observations and {} features in train set.".format(train.shape[0],train.shape[1]))
         print("{} observations and {} features in test set.".format(test.shape[0],test.shape[1]))
-        return train,test
+        return train,test,target
     # read processed data and features name list
     def read_data2(self,features_name = None):
         # Loading Train and Test Data
@@ -37,7 +37,7 @@ class Process:
         # extract target
         target = train['y'] # 目的変数を抽出
         features = features["feature"].tolist() # features list
-        return train, test, features
+        return train, test, target, features
     def submit(self,predict,tech):
         # make submit file
         submit_file = pd.read_csv(self.home_path + '/input/original/submit_file.csv')
@@ -63,6 +63,7 @@ class Process:
         # save or not
         if file_name is not None: 
             plt.savefig(self.home_path + '/output/image/' + file_name)
+    # 要変更
     def extract_best_features(self,importance_df,num,file_name = None):
         cols = (importance_df[["feature", "importance"]]
                 .groupby("feature")
