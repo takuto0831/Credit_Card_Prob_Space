@@ -7,15 +7,21 @@
 
 2005年4月-2005年9月までのクレジットカード顧客の支払い情報やユーザーのデモグラフィック情報を元に, おそらく次月もしくは未来のある時点での支払いの履行(0)or不履行(1)を予測する.
 
-## 参考url
+## reference
 
 - [kaggle tutorial](https://www.kaggle.com/lucabasa/credit-card-default-a-very-pedagogical-notebook)
 - [optuna](https://github.com/pfnet/optuna/blob/master/examples/lightgbm_simple.py)
 - [遺伝的アルゴリズムによる特徴量生成](https://www6.nhk.or.jp/kokusaihoudou/abcns/index.html)
 
-## 今後の方針
+## Plan
 
-各種手法においてクロスバリデーションを適用し, 暫定的に使用するモデルを決定する. 特徴量エンジニアリング+パラメータチューン(optuna?)+遺伝的アルゴリズムによる特徴量探索.
+とりあえずいろいろなことを, [exploratory_data_analysis](https://github.com/takuto0831/Credit_Card_Prob_Space/blob/master/jn/exploratory_data_analysis.ipynb)において実行し, 汎用的な書き方でスクリプト化する. 特徴量エンジニアリングは[feature_engineering]()ページで試す
+
+- 各種手法のクロスバリデーション
+- 特徴量エンジニアリング
+- optunaによるハイパーパラメータチューニング (Lightgbmについて作成)
+- 遺伝的アルゴリズムによる特徴量探索
+- 機械学習のための特徴量エンジニアリング(株式会社ホクソエム)を読む
 
 # Directory
 
