@@ -26,24 +26,27 @@
 # Directory
 
 ```
+.
 ├── README.md
 ├── input
 │   ├── About_data.xlsx
 │   ├── aggregated
 │   ├── features
-│   └── original
-│       ├── submit_file.csv
-│       ├── test_data.csv
-│       └── train_data.csv
+│   ├── original
+│   │   ├── submit_file.csv
+│   │   ├── test_data.csv
+│   │   └── train_data.csv
+│   └── parameters
+│       └── lgb_classifer_param.txt
 ├── jn
 │   ├── exploratory_data_analysis.ipynb
-│   ├── main.ipynb
 │   └── make_parameters.ipynb
 ├── output
 │   ├── image
 │   ├── report
 │   │   └── train_data_profile.html
 │   └── submit
+│       ├── lightgbm_optuna_20190420.csv
 │       └── simple_decision_tree_20190419.csv
 └── py
     ├── __init__.py
@@ -51,7 +54,9 @@
     │   └── base.cpython-36.pyc
     ├── base.py
     └── models
+        ├── Classifier.py
         ├── Ensemble.py
-        ├── GradientBoosting.py
-        └── __init__.py
+        ├── __init__.py
+        └── __pycache__
+            └── Classifier.cpython-36.pyc
 ```
