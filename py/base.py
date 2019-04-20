@@ -63,7 +63,7 @@ class Process:
         # save or not
         if file_name is not None: 
             plt.savefig(self.home_path + '/output/image/' + file_name)
-    # 要変更
+    #### 要変更 ####
     def extract_best_features(self,importance_df,num,file_name = None):
         cols = (importance_df[["feature", "importance"]]
                 .groupby("feature")
@@ -81,6 +81,7 @@ class Applicate:
         total = df.isnull().sum().sort_values(ascending =False)
         percent = (df.isnull().sum()/df.isnull().count()*100).sort_values(ascending = False)
         return pd.concat([total, percent], axis=1, keys=['Total', 'Percent']).transpose()
+    #### 要変更 ####
     def under_sampling(self,num,rate,train,features):
         # 外れ値の比率を確認
         print('outlier rate is {a:.4%}, So we increase the proportion of outliers to {b:.4%}'
@@ -110,11 +111,10 @@ class Applicate:
         
 # other
 def line(text):
-    line_notify_token = '07tI1nvYaAtGaLdsCaxKZxkboOU0OsvLregXqodN2ZV' #先程発行したコードを貼ります
+    line_notify_token = '07tI1nvYaAtGaLdsCaxKZxkboOU0OsvLregXqodN2ZV' #発行したコード
     line_notify_api = 'https://notify-api.line.me/api/notify'
-    message = '\n' + text
-    # 変数messageに文字列をいれて送信します トークン名の隣に文字が来てしまうので最初に改行しました
-    payload = {'message': message}
+    # 変数messageに文字列をいれて送信します トークン名の隣に文字が来てしまうので最初に改行
+    payload = {'message': '\n' + text}
     headers = {'Authorization': 'Bearer ' + line_notify_token}
     line_notify = requests.post(line_notify_api, data=payload, headers=headers)
 @contextmanager
