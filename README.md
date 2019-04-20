@@ -10,7 +10,7 @@
 ## 参考url
 
 - [kaggle tutorial](https://www.kaggle.com/lucabasa/credit-card-default-a-very-pedagogical-notebook)
-- [optune](https://github.com/pfnet/optuna/blob/master/examples/lightgbm_simple.py)
+- [optuna](https://github.com/pfnet/optuna/blob/master/examples/lightgbm_simple.py)
 - [遺伝的アルゴリズムによる特徴量生成](https://www6.nhk.or.jp/kokusaihoudou/abcns/index.html)
 
 ## 今後の方針
