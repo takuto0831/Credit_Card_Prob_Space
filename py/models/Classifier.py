@@ -171,6 +171,21 @@ class DecisionTree:
             # score
             score.append(f1_score(y_true = train.iloc[val_index]['y'], y_pred = pred))
         return 1 - np.mean(score)
+    def validation(self,train,features,param):
+        score = []
+        for i,(trn_index, val_index) in enumerate(self.fold.split(train)):
+            print("fold n°{}".format(i+1))
+            # model execute
+            model = DecisionTreeClassifier(**param)
+            model.fit(train.iloc[trn_index][features], train.iloc[trn_index]['y'])
+            # validation predict
+            pred = model.predict(train.iloc[val_index][features])
+            pred = np.round(pred).astype(int)
+            # score
+            score.append(f1_score(y_true = train.iloc[val_index]['y'], y_pred = pred))
+        # transform dataframe
+        ans = pd.DataFrame({"model":"Decision Tree Classifier","fold":range(1,i+2),"score":score} )
+        return ans
     def prediction(self,train,test,features,param):
         # 不足しているパラメータを補完
         param.update(self.base_param)
