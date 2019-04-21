@@ -4,9 +4,11 @@
 1: 訓練データを用いた validation code 
 2: テストデータを用いた prediction code
 3: 訓練データを用いた parameter tuning code (optuna)
+4: モデル特有の可視化コード等 other code
 
 class 
-- LightGBM 
+1: LightGBM 
+2: DecisionTree
 
 '''
 
@@ -15,7 +17,7 @@ import pandas as pd # data processing
 import lightgbm as lgb
 from xgboost import XGBClassifier
 from functools import partial
-import optuna
+import optuna, os
 from sklearn.metrics import f1_score
 from sklearn.model_selection import KFold
 from sklearn.tree import DecisionTreeClassifier, export_graphviz
@@ -23,18 +25,37 @@ from sklearn.ensemble import RandomForestClassifier , GradientBoostingClassifier
 import pydotplus 
 from IPython.display import Image
 from sklearn.externals.six import StringIO
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 class LightGBM:
     def __init__(self):
-        # validation
+        # home path
+        self.home_path = os.path.expanduser("~") + '/Desktop/Credit_Comp'
+        # validation setting
         self.fold = KFold(n_splits=5,random_state=831,shuffle=True)
         # base hyper parameter
         self.base_param = {
             'objective': 'binary',
             'metric': 'binary_error'
             }
-            
+    # display boosting importance (selection save or not)    
+    def display_importances(self,importance_df,title,file_name = None):
+        cols = (importance_df[["feature", "importance"]]
+                .groupby("feature")
+                .mean()
+                .sort_values(by="importance", ascending=False)[:500].index)
+        best_features = importance_df.loc[importance_df.feature.isin(cols)]
+        plt.figure(figsize=(14,80))
+        sns.barplot(x="importance",y="feature",
+                    data=best_features.sort_values(by="importance",ascending=False))
+        plt.title(title + 'Features (avg over folds)')
+        plt.tight_layout()
+        # save or not
+        if file_name is not None: 
+            plt.savefig(self.home_path + '/output/image/' + file_name)        
     def Model(self,train,trn_index,val_index,features,category_features,param):
+        
         # data set
         trn_data = lgb.Dataset(train.iloc[trn_index][features], label=train.iloc[trn_index]['y'])
         val_data = lgb.Dataset(train.iloc[val_index][features], label=train.iloc[val_index]['y'])
@@ -116,7 +137,9 @@ class LightGBM:
         return 1 - np.mean(score)
 class DecisionTree:
     def __init__(self):
-        # validation
+        # home path
+        self.home_path = os.path.expanduser("~") + '/Desktop/Credit_Comp'
+        # validation setting
         self.fold = KFold(n_splits=5,random_state=831,shuffle=True)
         # base parameters
         self.base_param = {
