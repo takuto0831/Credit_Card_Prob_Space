@@ -38,6 +38,7 @@ class Process:
         target = train['y'] # 目的変数を抽出
         features = features["feature"].tolist() # features list
         return train, test, target, features
+    # make submit file
     def submit(self,predict,tech):
         # make submit file
         submit_file = pd.read_csv(self.home_path + '/input/original/submit_file.csv')
@@ -45,10 +46,12 @@ class Process:
         # save for output/(technic name + datetime + .csv)
         file_name = self.home_path + '/output/submit/' + tech + '_' + datetime.now().strftime("%Y%m%d") + ".csv"
         submit_file.to_csv(file_name, index=False)
+    # open parameters file
     def open_parameter(self,file_name):
         f = open(self.home_path + '/input/parameters/' + file_name + '.txt', 'rb')
         list_ = pickle.load(f)
         return list_
+    # display boosting importance (selection save or not)    
     def display_importances(self,importance_df,title,file_name = None):
         cols = (importance_df[["feature", "importance"]]
                 .groupby("feature")
@@ -63,16 +66,16 @@ class Process:
         # save or not
         if file_name is not None: 
             plt.savefig(self.home_path + '/output/image/' + file_name)
-    #### 要変更 ####
+    # make best feature list (selection save or not)
     def extract_best_features(self,importance_df,num,file_name = None):
-        cols = (importance_df[["feature", "importance"]]
+        cols = (importance_df[["feature", "importance"]]  
                 .groupby("feature")
                 .mean()
                 .sort_values(by="importance", ascending=False)
                 .reset_index())
         # save or not
         if file_name is not None: 
-            feather.write_dataframe(cols, self.home_path + '/input/features/' + file_name + '.feather')
+            cols.to_csv(self.home_path + '/input/features/' + file_name + '.csv')
         return cols[:num]["feature"].tolist()
 class Applicate:
     # 欠損値の確認
@@ -83,11 +86,10 @@ class Applicate:
         return pd.concat([total, percent], axis=1, keys=['Total', 'Percent']).transpose()
     #### 要変更 ####
     def under_sampling(self,num,rate,train,features):
-        # 外れ値の比率を確認
-        print('outlier rate is {a:.4%}, So we increase the proportion of outliers to {b:.4%}'
-              .format(a=train["target_class"].mean(), b=rate))
+        # 値の比率を確認
+        print('train data rate:', Counter(train['y']))
         # 前処理
-        data = train.query("target_class == 0")[features].copy()
+        data = train.query("y == 0")[features].copy()
         data = data.replace([np.inf, -np.inf], np.nan) # inf 処理
         data.fillna((data.mean()), inplace=True) # nan 処理
         # kmeans クラスタリング
