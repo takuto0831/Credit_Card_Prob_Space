@@ -8,6 +8,8 @@ import seaborn as sns
 import time, os, sys
 from contextlib import contextmanager
 from sklearn.cluster import KMeans
+from imblearn.under_sampling import RandomUnderSampler
+from collections import Counter
 
 class Process:
     def __init__(self):
@@ -51,21 +53,6 @@ class Process:
         f = open(self.home_path + '/input/parameters/' + file_name + '.txt', 'rb')
         list_ = pickle.load(f)
         return list_
-    # display boosting importance (selection save or not)    
-    def display_importances(self,importance_df,title,file_name = None):
-        cols = (importance_df[["feature", "importance"]]
-                .groupby("feature")
-                .mean()
-                .sort_values(by="importance", ascending=False)[:500].index)
-        best_features = importance_df.loc[importance_df.feature.isin(cols)]
-        plt.figure(figsize=(14,80))
-        sns.barplot(x="importance",y="feature",
-                    data=best_features.sort_values(by="importance",ascending=False))
-        plt.title(title + 'Features (avg over folds)')
-        plt.tight_layout()
-        # save or not
-        if file_name is not None: 
-            plt.savefig(self.home_path + '/output/image/' + file_name)
     # make best feature list (selection save or not)
     def extract_best_features(self,importance_df,num,file_name = None):
         cols = (importance_df[["feature", "importance"]]  
@@ -85,32 +72,19 @@ class Applicate:
         percent = (df.isnull().sum()/df.isnull().count()*100).sort_values(ascending = False)
         return pd.concat([total, percent], axis=1, keys=['Total', 'Percent']).transpose()
     #### 要変更 ####
-    def under_sampling(self,num,rate,train,features):
-        # 値の比率を確認
-        print('train data rate:', Counter(train['y']))
-        # 前処理
-        data = train.query("y == 0")[features].copy()
-        data = data.replace([np.inf, -np.inf], np.nan) # inf 処理
-        data.fillna((data.mean()), inplace=True) # nan 処理
-        # kmeans クラスタリング
-        kmeans = KMeans(n_clusters = num, random_state=831, n_jobs = -2).fit(data)
-        # 群別の構成比を少数派の件数に乗じて群別の抽出件数を計算
-        train['cluster'] = np.nan
-        train.loc[train['target_class'] == 0,'cluster'] = kmeans.labels_
-        count_sum = train.groupby('cluster').count().iloc[0:,0].as_matrix()
-        ratio = ( (1-rate) * train["target_class"].sum() ) / ( count_sum.sum()*rate)
-        samp_num = np.round(count_sum * ratio,0).astype(np.int32)
-        # 群別にサンプリング処理を実施
-        tmp = pd.DataFrame(index=[], columns=data.columns)
-        for i in np.arange(num) :
-            tmp_ = train[train['cluster']==i].sample(samp_num[i],replace=True)
-            tmp = pd.concat([tmp,tmp_])
-        # 外れ値データを結合
-        tmp = pd.concat([tmp,train.query("target_class == 1")])
-        del tmp['cluster']# クラスター列削除
-        print("{} observations and {} features in train set.".format(tmp.shape[0],tmp.shape[1]))
-        return tmp
-        
+    def down_sampling(self,train,features,rate=1):
+        # 正例(y=1)の数を保存
+        positive_count = train['y'].sum()
+        # 任意の比率を元に, down sampling
+        sampler = RandomUnderSampler(ratio={0:positive_count*rate, 1:positive_count}, random_state=831)
+        X_resampled, y_resampled = sampler.fit_resample(train[features], train['y'])
+        # 結果の確認
+        print('original data rate:', Counter(train['y']))
+        print('down sampling data rate:', Counter(y_resampled))
+        # numpy -> pandas
+        data = pd.DataFrame(X_resampled, columns=features)
+        data['y'] = y_resampled
+        return data
 # other
 def line(text):
     line_notify_token = '07tI1nvYaAtGaLdsCaxKZxkboOU0OsvLregXqodN2ZV' #発行したコード
