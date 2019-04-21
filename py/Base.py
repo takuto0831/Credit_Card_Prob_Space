@@ -53,6 +53,11 @@ class Process:
         f = open(self.home_path + '/input/parameters/' + file_name + '.txt', 'rb')
         list_ = pickle.load(f)
         return list_
+    # save parameter file
+    def save_parameter(self,data,file_name):
+        f = open(self.home_path + '/input/parameters/' + file_name + '.txt', 'wb')
+        list = data
+        pickle.dump(list, f)
     # make best feature list (selection save or not)
     def extract_best_features(self,importance_df,num,file_name = None):
         cols = (importance_df[["feature", "importance"]]  
