@@ -122,32 +122,45 @@ class DecisionTree:
         self.base_param = {
             'random_state': 831
             }
-    def tuning(train,features,trial):
+    def display_tree(self,model):
+        dot_data = StringIO()
+        export_graphviz(model,out_file=dot_data)
+        graph = pydotplus.graph_from_dot_data(dot_data.getvalue())
+        return Image(graph.create_png())
+    def tuning(self,train,features,trial):
         # score
         score = []
         # tuning parameters
-        params = {
+        param = {
             'random_state': 831,
             'max_depth': trial.suggest_int('max_depth', 1, 20),
             'criterion': trial.suggest_categorical('criterion', ['gini', 'entropy']),
-            'min_samples_leaf': trial.suggest_int('min_samples_leaf', 1, 10)
+            'min_samples_leaf': trial.suggest_int('min_samples_leaf', 1, 10),
             }
         for i,(trn_index, val_index) in enumerate(self.fold.split(train)):
             print("fold n°{}".format(i+1))
-            # data set
-            trn_data = lgb.Dataset(train.iloc[trn_index][features], label=train.iloc[trn_index]['y'])
-            val_data = lgb.Dataset(train.iloc[val_index][features], label=train.iloc[val_index]['y'])
             # model
-            model = lgb.train(param,
-                              trn_data, 
-                              categorical_feature = category_features, # カテゴリ変数として処理
-                              valid_sets = [trn_data, val_data],
-                              num_boost_round=20000, 
-                              verbose_eval=100, 
-                              early_stopping_rounds=200)
+            model = DecisionTreeClassifier(**param)
+            model.fit(train.iloc[trn_index][features], train.iloc[trn_index]['y'])
             # validation predict
-            pred = model.predict(train.iloc[val_index][features],num_iteration = model.best_iteration)
+            pred = model.predict(train.iloc[val_index][features])
             pred = np.round(pred).astype(int)
             # score
             score.append(f1_score(y_true = train.iloc[val_index]['y'], y_pred = pred))
         return 1 - np.mean(score)
+    def prediction(self,train,test,features,param):
+        # 不足しているパラメータを補完
+        param.update(self.base_param)
+        # 予測値を格納する
+        pred = np.zeros(test.shape[0])
+        for i,(trn_index, val_index) in enumerate(self.fold.split(train)):
+            print("fold n°{}".format(i+1))
+            # model execute
+            model = DecisionTreeClassifier(**param)
+            model.fit(train.iloc[trn_index][features], train.iloc[trn_index]['y'])
+            # validation predict
+            tmp = model.predict(test[features])
+            pred += tmp
+        # transpose binary value
+        pred = np.round(pred/(i+1)).astype(int)
+        return pred
