@@ -33,7 +33,7 @@ class LightGBM:
         # home path
         self.home_path = os.path.expanduser("~") + '/Desktop/Credit_Comp'
         # validation setting
-        self.fold = KFold(n_splits=5,random_state=831,shuffle=True)
+        self.fold = KFold(n_splits=4,random_state=831,shuffle=True)
         # base hyper parameter
         self.base_param = {
             'objective': 'binary',
@@ -54,7 +54,7 @@ class LightGBM:
         # save or not
         if file_name is not None: 
             plt.savefig(self.home_path + '/output/image/' + file_name)        
-    def Model(self,train,trn_index,val_index,features,category_features,param):
+    def Model(self,train,trn_index,val_index,features,param={}):
         
         # data set
         trn_data = lgb.Dataset(train.iloc[trn_index][features], label=train.iloc[trn_index]['y'])
@@ -62,19 +62,19 @@ class LightGBM:
         # model
         model = lgb.train(param, 
                           trn_data, 
-                          categorical_feature = category_features,
+                          # categorical_feature = category_features,
                           num_boost_round= 20000, 
                           valid_sets = [trn_data, val_data],
                           verbose_eval= 100, 
                           early_stopping_rounds= 200)
         return model
-    def validation(self,train,features,category_features,param):
+    def validation(self,train,features,param={}, name = "Lightgbm Classifier"):
         score = []
         feature_importance = pd.DataFrame() # importance data frame
         for i,(trn_index, val_index) in enumerate(self.fold.split(train)):
             print("fold n°{}".format(i+1))
             # model execute
-            model = self.Model(train,trn_index,val_index,features,category_features,param)
+            model = self.Model(train,trn_index,val_index,features,param)
             # model importance 
             fold_importance = pd.DataFrame({'feature': features, 
                                             'importance': model.feature_importance(),
@@ -86,9 +86,9 @@ class LightGBM:
             # score
             score.append(f1_score(y_true = train.iloc[val_index]['y'], y_pred = pred))
         # transform dataframe
-        ans = pd.DataFrame({"model":"Lightgbm Classifier","fold":range(1,i+2),"score":score} )
+        ans = pd.DataFrame({"model":name,"fold":range(1,i+2),"score":score} )
         return ans, feature_importance
-    def prediction(self,train,test,features,category_features,param):
+    def prediction(self,train,test,features,param={}):
         # 不足しているパラメータを補完
         param.update(self.base_param)
         # 予測値を格納する
@@ -96,14 +96,14 @@ class LightGBM:
         for i,(trn_index, val_index) in enumerate(self.fold.split(train)):
             print("fold n°{}".format(i+1))
             # model execute
-            model = Model(train,trn_index,val_index,features,category_features,param)
+            model = Model(train,trn_index,val_index,features,param)
             # validation predict
             tmp = model.predict(test[features], num_iteration = model.best_iteration)
             pred += tmp
         # transpose binary value
         pred = np.round(pred/(i+1)).astype(int)
         return pred
-    def tuning(self,train,features,category_features,trial):
+    def tuning(self,train,features,trial):
         # score
         score = []
         # tuning parameters
@@ -128,7 +128,7 @@ class LightGBM:
         for i,(trn_index, val_index) in enumerate(self.fold.split(train)):
             print("fold n°{}".format(i+1))
             # model execute
-            model = Model(train,trn_index,val_index,features,category_features,param)
+            model = Model(train,trn_index,val_index,features,param)
             # validation predict
             pred = model.predict(train.iloc[val_index][features],num_iteration = model.best_iteration)
             pred = np.round(pred).astype(int)
@@ -140,7 +140,7 @@ class DecisionTree:
         # home path
         self.home_path = os.path.expanduser("~") + '/Desktop/Credit_Comp'
         # validation setting
-        self.fold = KFold(n_splits=5,random_state=831,shuffle=True)
+        self.fold = KFold(n_splits=4,random_state=831,shuffle=True)
         # base parameters
         self.base_param = {
             'random_state': 831
@@ -171,7 +171,7 @@ class DecisionTree:
             # score
             score.append(f1_score(y_true = train.iloc[val_index]['y'], y_pred = pred))
         return 1 - np.mean(score)
-    def validation(self,train,features,param):
+    def validation(self,train,features,param, name="Decision Tree Classifier"):
         score = []
         for i,(trn_index, val_index) in enumerate(self.fold.split(train)):
             print("fold n°{}".format(i+1))
@@ -184,7 +184,7 @@ class DecisionTree:
             # score
             score.append(f1_score(y_true = train.iloc[val_index]['y'], y_pred = pred))
         # transform dataframe
-        ans = pd.DataFrame({"model":"Decision Tree Classifier","fold":range(1,i+2),"score":score} )
+        ans = pd.DataFrame({"model":name,"fold":range(1,i+2),"score":score} )
         return ans
     def prediction(self,train,test,features,param):
         # 不足しているパラメータを補完

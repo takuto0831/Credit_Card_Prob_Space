@@ -19,7 +19,7 @@ class Process:
     def read_data1(self):
         train = pd.read_csv(self.home_path + '/input/original/train_data.csv').drop('id',axis=1)
         test = pd.read_csv(self.home_path + '/input/original/test_data.csv').drop('ID',axis=1)
-        target = train['y'] # 目的変数を抽出
+        target = train['y'].copy() # 目的変数を抽出
         print("{} observations and {} features in train set.".format(train.shape[0],train.shape[1]))
         print("{} observations and {} features in test set.".format(test.shape[0],test.shape[1]))
         return train,test,target
@@ -37,7 +37,7 @@ class Process:
         print("{} observations and {} features in test set.".format(test.shape[0],test.shape[1]))
         print("{} observations and {} features in features set.".format(features.shape[0],features.shape[1]))
         # extract target
-        target = train['y'] # 目的変数を抽出
+        target = train['y'].copy() # 目的変数を抽出
         features = features["feature"].tolist() # features list
         return train, test, target, features
     # make submit file
@@ -76,7 +76,7 @@ class Applicate:
         total = df.isnull().sum().sort_values(ascending =False)
         percent = (df.isnull().sum()/df.isnull().count()*100).sort_values(ascending = False)
         return pd.concat([total, percent], axis=1, keys=['Total', 'Percent']).transpose()
-    #### 要変更 ####
+    # down sampling
     def down_sampling(self,train,features,rate=1):
         # 正例(y=1)の数を保存
         positive_count = train['y'].sum()
