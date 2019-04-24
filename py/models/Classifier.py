@@ -174,7 +174,7 @@ class DecisionTree:
     def validation(self,train,features,param, name="Decision Tree Classifier"):
         score = []
         for i,(trn_index, val_index) in enumerate(self.fold.split(train)):
-            print("fold n°{}".format(i+1))
+            # print("fold n°{}".format(i+1))
             # model execute
             model = DecisionTreeClassifier(**param)
             model.fit(train.iloc[trn_index][features], train.iloc[trn_index]['y'])
