@@ -11,7 +11,7 @@
 
 - [kaggle tutorial](https://www.kaggle.com/lucabasa/credit-card-default-a-very-pedagogical-notebook)
 - [optuna](https://github.com/pfnet/optuna/blob/master/examples/lightgbm_simple.py)
-- [遺伝的アルゴリズムによる特徴量生成](https://www6.nhk.or.jp/kokusaihoudou/abcns/index.html)
+- [遺伝的アルゴリズムによる特徴量生成](https://qiita.com/overlap/items/e7f1077ef8239f454602)
 
 ## Plan
 
