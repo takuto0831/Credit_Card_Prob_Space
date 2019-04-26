@@ -44,9 +44,9 @@ class LightGBM:
         cols = (importance_df[["feature", "importance"]]
                 .groupby("feature")
                 .mean()
-                .sort_values(by="importance", ascending=False)[:500].index)
+                .sort_values(by="importance", ascending=False)[:100].index)
         best_features = importance_df.loc[importance_df.feature.isin(cols)]
-        plt.figure(figsize=(14,80))
+        plt.figure(figsize=(14,40))
         sns.barplot(x="importance",y="feature",
                     data=best_features.sort_values(by="importance",ascending=False))
         plt.title(title + 'Features (avg over folds)')
