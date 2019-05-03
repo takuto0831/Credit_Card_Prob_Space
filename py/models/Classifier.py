@@ -96,7 +96,7 @@ class LightGBM:
         for i,(trn_index, val_index) in enumerate(self.fold.split(train)):
             print("fold n°{}".format(i+1))
             # model execute
-            model = Model(train,trn_index,val_index,features,param)
+            model = self.Model(train,trn_index,val_index,features,param)
             # validation predict
             tmp = model.predict(test[features], num_iteration = model.best_iteration)
             pred += tmp
@@ -128,7 +128,7 @@ class LightGBM:
         for i,(trn_index, val_index) in enumerate(self.fold.split(train)):
             print("fold n°{}".format(i+1))
             # model execute
-            model = Model(train,trn_index,val_index,features,param)
+            model = self.Model(train,trn_index,val_index,features,param)
             # validation predict
             pred = model.predict(train.iloc[val_index][features],num_iteration = model.best_iteration)
             pred = np.round(pred).astype(int)
