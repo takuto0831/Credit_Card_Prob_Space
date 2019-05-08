@@ -6,7 +6,7 @@
 3: 訓練データを用いた parameter tuning code (optuna)
 4: モデル特有の可視化コード等 other code
 
-class 
+- class 
 1: LightGBM 
 2: DecisionTree
 
