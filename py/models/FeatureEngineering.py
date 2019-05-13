@@ -3,21 +3,28 @@
 
 
 '''
-import os
+import sys, os
+# set path
+sys.path.append(os.getcwd())
+
 import numpy as np # linear algebra
 import pandas as pd # data processing
 import lightgbm as lgb
+import feather
 from xgboost import XGBClassifier
 from sklearn.metrics import f1_score
 from sklearn.model_selection import KFold
 from sklearn.tree import DecisionTreeClassifier, export_graphviz
 from sklearn.ensemble import RandomForestClassifier , GradientBoostingClassifier, AdaBoostClassifier
-import Classifier
+import Classifier, Base
 
 # genetic algorithm
 from deap import algorithms, base, creator, tools, gp
 import operator, math, time
 from tqdm import tqdm
+
+# instance
+Process = Base.Process()
 
 class GeneticFetureMake: 
     def __init__(self):
@@ -29,10 +36,11 @@ class GeneticFetureMake:
         DecisionTree = Classifier.DecisionTree()
         return DecisionTree.validation(train,features,params) # decision tree algorithm
         
-    def GeneticMake(self,train,test,features,params,iteration,num):
+    def GeneticMake(self,train,test,features,params,iteration,feature_limit,gen_num=10):
         '''
         iteration: 反復回数, 特徴量作成の試行回数
-        num: 許容する特徴量数の限界値
+        feature_limit: 許容する特徴量数の限界値
+        gen_num: 進化する世代数
         '''
         # 分母が0の場合を考慮した, 除算関数
         def protectedDiv(left, right):
@@ -52,8 +60,9 @@ class GeneticFetureMake:
         prev_score = np.mean(base_score['score']) # base score
         exprs = [] # 生成した特徴量
         results = pd.DataFrame(columns=['n_features','best_score','val_score']) # 結果を格納する. (best_score == val_score ??)
-        n_features = test.shape[1] # 初期時点の特徴量数
+        n_features = len(features) # 初期時点の特徴量数
         X_train = train[features] # 訓練データの特徴量
+        X_test = test[features] # テストデータの特徴量
         y_train = train['y'] # 訓練データのターゲット変数
         # main
         for i in tqdm(range(iteration)):
@@ -66,6 +75,7 @@ class GeneticFetureMake:
             pset.addPrimitive(np.cos, 1)
             pset.addPrimitive(np.sin, 1)
             pset.addPrimitive(np.tan, 1)
+            # function
             def eval_genfeat(individual):
                 func = toolbox.compile(expr=individual)
                 # make new features
@@ -109,9 +119,9 @@ class GeneticFetureMake:
             mstats.register("max", np.max)
         
             # 進化の実行
-            # 交叉確率50%、突然変異確率10%、10世代まで進化
+            # 交叉確率50%、突然変異確率10%、?世代まで進化
             start_time = time.time()
-            pop, log = algorithms.eaSimple(pop, toolbox, 0.5, 0.1, 10, stats=mstats, halloffame=hof, verbose=True)
+            pop, log = algorithms.eaSimple(pop, toolbox, 0.5, 0.1, gen_num, stats=mstats, halloffame=hof, verbose=True)
             end_time = time.time()
         
             # ベスト解とscoreの保持
@@ -123,12 +133,12 @@ class GeneticFetureMake:
                 # 生成変数の追加
                 func = toolbox.compile(expr=best_expr)
                 features_train = [np.array(X_train)[:,j] for j in range(n_features)]
-                features_test = [np.array(test)[:,j] for j in range(n_features)]
+                features_test = [np.array(X_test)[:,j] for j in range(n_features)]
                 new_feat_train = func(*features_train)
                 new_feat_test = func(*features_test)
                 # データ更新
                 X_train = pd.concat([X_train,pd.DataFrame(new_feat_train,columns=['NEW'+ str(i)])],axis=1)
-                test = pd.concat([test,pd.DataFrame(new_feat_test,columns=['NEW'+ str(i)])],axis=1)
+                X_test = pd.concat([X_test,pd.DataFrame(new_feat_test,columns=['NEW'+ str(i)])],axis=1)
                 new_features = X_train.columns.values
                 # テストスコアの計算（プロット用）
                 val_score = self.Model(pd.concat([X_train,y_train],axis=1),new_features,params)
@@ -144,8 +154,10 @@ class GeneticFetureMake:
                 tmp = pd.Series( [n_features, best_score, np.mean(val_score['score'])], index=results.columns )
                 results = results.append( tmp, ignore_index=True )
                 exprs.append(best_expr)
-                
-                # 変数追加後の特徴量数が60を超えた場合break
-                if n_features >= num:
+                # save 
+                Process.write_feather(pd.concat([X_train,y_train],axis=1),file_name = 'train_gen')
+                Process.write_feather(X_test,file_name = 'test_gen')
+                # 変数追加後の特徴量数が??を超えた場合break
+                if n_features >= feature_limit:
                     break
-        return pd.concat([X_train,y_train],axis=1), test
+        return pd.concat([X_train,y_train],axis=1), X_test, results, exprs
