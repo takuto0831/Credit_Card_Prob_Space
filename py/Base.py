@@ -23,22 +23,25 @@ class Process:
         print("{} observations and {} features in train set.".format(train.shape[0],train.shape[1]))
         print("{} observations and {} features in test set.".format(test.shape[0],test.shape[1]))
         return train,test,target
-    # read processed data and features name list
-    def read_data2(self,features_name = None):
+
+    # read processed data and features name list (feather type)
+    def write_feather(self,data,file_name):
+        # save
+        feather.write_dataframe(data, self.home_path + '/input/processed/' + file_name + '.feather')
+    def read_feather(self,train_name,test_name,features_name = None):
         # Loading Train and Test Data
-        train = pd.read_csv(self.home_path + '/input/aggregated/train.csv')
-        test = pd.read_csv(self.home_path + '/input/aggregated/test.csv')
+        train = feather.read_dataframe(self.home_path + '/input/processed/' + train_name + '.feather')
+        test = feather.read_dataframe(self.home_path + '/input/processed/' + test_name + '.feather')
         features = []
-        # features list
-        if features_name is not None: 
-          features = feather.read_dataframe(self.home_path + 'input/features/' + features_name + ".feather")
+        target = train['y'].copy() # 目的変数を抽出
         # check data frame
         print("{} observations and {} features in train set.".format(train.shape[0],train.shape[1]))
         print("{} observations and {} features in test set.".format(test.shape[0],test.shape[1]))
-        print("{} observations and {} features in features set.".format(features.shape[0],features.shape[1]))
-        # extract target
-        target = train['y'].copy() # 目的変数を抽出
-        features = features["feature"].tolist() # features list
+        # features list
+        if features_name is not None: 
+            features = feather.read_dataframe(self.home_path + 'input/features/' + features_name + ".feather")
+            print("{} observations and {} features in features set.".format(features.shape[0],features.shape[1]))
+            features = features["feature"].tolist() # features list
         return train, test, target, features
     # make submit file
     def submit(self,predict,tech):
