@@ -34,7 +34,9 @@ class GeneticFetureMake:
         self.fold = KFold(n_splits=4,random_state=831,shuffle=True)
     def Model(self,train,features,params):
         DecisionTree = Classifier.DecisionTree()
+        # LightGBM = Classifier.LightGBM()
         return DecisionTree.validation(train,features,params) # decision tree algorithm
+        # return LightGBM.validation(train,features,params) # lightgbm algorithm
         
     def GeneticMake(self,train,test,features,params,iteration,feature_limit,gen_num=10):
         '''
@@ -154,7 +156,7 @@ class GeneticFetureMake:
                 tmp = pd.Series( [n_features, best_score, np.mean(val_score['score'])], index=results.columns )
                 results = results.append( tmp, ignore_index=True )
                 exprs.append(best_expr)
-                # save 
+                # save with file name
                 Process.write_feather(pd.concat([X_train,y_train],axis=1),file_name = 'train_gen')
                 Process.write_feather(X_test,file_name = 'test_gen')
                 # 変数追加後の特徴量数が??を超えた場合break
